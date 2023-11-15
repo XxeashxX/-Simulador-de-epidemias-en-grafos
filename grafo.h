@@ -5,8 +5,15 @@
 
 // Función para simular la propagación de la Gripe
 void simularGripe(int dias, int filas, int columnas, int porcentajeDeInfectadosIniciales) {
+    FILE *file = fopen("GripeSimulacion.csv", "w");
+    if (file == NULL)
+    {
+        printf("No se pudo abrir el archivo\n");
+        exit(1);
+    }
     int CantidadNodos = filas * columnas;
     int **matrizDeDatos;
+    int **matrizDeAdyacencia;
     matrizDeDatos = (int **)malloc(((filas * columnas)) * sizeof(int *));
     for (int i = 0; i < (filas * columnas); i++) {
         matrizDeDatos[i] = (int *)malloc(dias * sizeof(int));
@@ -15,6 +22,17 @@ void simularGripe(int dias, int filas, int columnas, int porcentajeDeInfectadosI
     for (int i = 0; i < (filas * columnas); i++) {
         for (int j = 0; j < dias; j++) {
             matrizDeDatos[i][j] = Susceptible;
+        }
+    }
+
+    matrizDeAdyacencia = (int **)malloc(CantidadNodos * sizeof(int *));
+    for (int i = 0; i < CantidadNodos; i++) {
+        matrizDeAdyacencia[i] = (int *)malloc(CantidadNodos * sizeof(int));
+    }
+
+    for (int i = 0; i < CantidadNodos; i++) {
+        for (int j = 0; j < CantidadNodos; j++) {
+            matrizDeAdyacencia[i][j] = 0;
         }
     }
 
@@ -74,13 +92,10 @@ void simularGripe(int dias, int filas, int columnas, int porcentajeDeInfectadosI
 
     // Simular la propagación durante un cierto número de días
     bool confirmacion = false;
-    for (int dia = 0; dia < dias; dia++)
-    {
+    for (int dia = 0; dia < dias; dia++){
         //ciclo para recorrer cada nodo
-        for (int i = 0; i < filas; i++)
-        {
-            for (int j = 0; j < columnas; j++)
-            {
+        for (int i = 0; i < filas; i++){
+            for (int j = 0; j < columnas; j++){
                 int indice = (i * columnas + j);
                 //repite el estado del dia anterior
                 if (dia - 1 >= 0){
@@ -108,64 +123,83 @@ void simularGripe(int dias, int filas, int columnas, int porcentajeDeInfectadosI
                     // consulta si el estado del nodo en el momento es infectado, si el día anterior estaba infectado y si no está recuperado
                     if (matrizNodos[i][j].epidemia.Estado == Infectado && matrizNodos[filaAleatoria][columnaAleatoria].epidemia.Estado != Recuperado){
                         // Simulación simple: la persona infectada aleatoriamente
-                        if (rand() % 100 < 5)
-                        {
+                        if (rand() % 100 < 5){
                             matrizNodos[filaAleatoria][columnaAleatoria].epidemia.Estado = Infectado;
                             matrizDeDatos[indiceAleatorio][dia] = Infectado;
                             confirmacion = true;
-                        }
+                            matrizDeAdyacencia[indice][indiceAleatorio] = 1;
+                        }                            
                     }
                     else{
                         //si el nodo no está infectado pero interactúa con uno infectado
-                        if (rand() % 100 < 5 && matrizNodos[filaAleatoria][columnaAleatoria].epidemia.Estado == Infectado && matrizNodos[i][j].epidemia.Estado != Recuperado)
-                        {
+                        if (rand() % 100 < 5 && matrizNodos[filaAleatoria][columnaAleatoria].epidemia.Estado == Infectado && matrizNodos[i][j].epidemia.Estado != Recuperado){
                             matrizNodos[i][j].epidemia.Estado = Infectado;
                             matrizDeDatos[indice][dia] = Infectado;
                             confirmacion = true;
-                        }
-                    }
-                    // Simulación simple: el nodo se recupera aleatoriamente
-                    if (matrizNodos[i][j].epidemia.Estado == Infectado && matrizDeDatos[indice][dia] == Infectado){
-                        if (rand() % 100 < 0.25)
-                        {
-                            matrizNodos[i][j].epidemia.Estado = Recuperado;
-                            matrizDeDatos[indice][dia] = Recuperado;
-                        }
-                    }
-                    if (confirmacion == true && dia - 1 >= 0 && matrizDeDatos[indice][dia - 1] == Infectado)
-                    {
-                        matrizNodos[i][j].epidemia.Estado = Infectado;
-                        matrizDeDatos[indice][dia] = Infectado;
-                    }
-                    else{
-                        if (confirmacion == true && dia - 1 >= 0 && matrizDeDatos[indice][dia - 1] == Recuperado)
-                        {
-                            matrizNodos[i][j].epidemia.Estado = Recuperado;
-                            matrizDeDatos[indice][dia] = Recuperado;
+                            matrizDeAdyacencia[indiceAleatorio][indice] = 1;
                         }
                         else{
-                            if (confirmacion == true && dia - 1 >= 0 && matrizDeDatos[indice][dia - 1] == Susceptible)
-                            {
-                                matrizNodos[i][j].epidemia.Estado = Susceptible;
-                                matrizDeDatos[indice][dia] = Susceptible;
+                            if (matrizNodos[i][j].epidemia.Estado == Recuperado && matrizNodos[filaAleatoria][columnaAleatoria].epidemia.Estado == Infectado || matrizNodos[filaAleatoria][columnaAleatoria].epidemia.Estado == Susceptible){
+                                matrizDeAdyacencia[indice][indiceAleatorio] = 2;
                             }
+                            
                         }
+                    }                        
+                }
+                    
+                 // Simulación simple: el nodo se recupera aleatoriamente
+                if (matrizNodos[i][j].epidemia.Estado == Infectado && matrizDeDatos[indice][dia] == Infectado){
+                    if (rand() % 100 < 0.25)
+                    {
+                        matrizNodos[i][j].epidemia.Estado = Recuperado;
+                        matrizDeDatos[indice][dia] = Recuperado;
+                    }
+                }
+                if (confirmacion == true && dia - 1 >= 0 && matrizDeDatos[indice][dia - 1] == Infectado)
+                {
+                    matrizNodos[i][j].epidemia.Estado = Infectado;
+                    matrizDeDatos[indice][dia] = Infectado;
+                }
+                else{
+                    if (confirmacion == true && dia - 1 >= 0 && matrizDeDatos[indice][dia - 1] == Recuperado)
+                    {
+                        matrizNodos[i][j].epidemia.Estado = Recuperado;
+                        matrizDeDatos[indice][dia] = Recuperado;
+                    }
+                    else{
+                        if (confirmacion == true && dia - 1 >= 0 && matrizDeDatos[indice][dia - 1] == Susceptible)
+                        {
+                            matrizNodos[i][j].epidemia.Estado = Susceptible;
+                            matrizDeDatos[indice][dia] = Susceptible;
+                        }                        
                     }
                 }
             }
         }
+        for (int i = 0; i < (CantidadNodos); i++){
+            for (int j = 0; j < (CantidadNodos); j++){
+                if (j == (CantidadNodos)){
+                    fprintf(file, "%d", matrizDeAdyacencia[i][j]);
+                } else {
+                    fprintf(file, "%d,", matrizDeAdyacencia[i][j]);
+                }
+                
+            }
+        fprintf(file, "\n");
+        }
+        contador +=1;
+        fprintf(file, "\n");
     }
+
     for (int i = 0; i < filas; i++)
     {
         free(matrizNodos[i]); //libera memoria asignada a matrizNodos
     }
-    //escribir los datos obtenidos en archivo csv
-    FILE *file = fopen("GripeSimulacion.csv", "w");
-    if (file == NULL)
-    {
-        printf("No se pudo abrir el archivo\n");
-        exit(1);
+    for (int i = 0; i < filas; i++){
+        free(matrizDeAdyacencia[i]); //libera memoria asignada a matrizDeAdyaencia
     }
+    //escribir los datos obtenidos en archivo csv
+
     for (int i = 1; i <= dias; i++){
         if (i < dias){
         fprintf(file, "dia%d,", i);
