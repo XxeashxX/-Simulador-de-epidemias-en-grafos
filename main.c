@@ -8,11 +8,12 @@ int main() {
 
     // Definir los parámetros de la simulación
     int dias = 10;
-    int CantidadNodos = 25;
-    int porcentajeDeInfectadosIniciales = int(2);
+    int filas = 5;
+    int columnas = 5;
+    int porcentajeDeInfectadosIniciales = (int)2;
 
     // Llama a la función para simular la propagación de la Gripe
-    simularGripe(dias, CantidadNodos, porcentajeDeInfectadosIniciales);
+    simularGripe(dias, filas, columnas, porcentajeDeInfectadosIniciales);
 
     return 0;
 }
