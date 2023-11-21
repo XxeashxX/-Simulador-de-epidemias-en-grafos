@@ -34,8 +34,7 @@ for dia in range(num_dias):
 # Dibujar el grafo para cada día
 for i, G in enumerate(grafos):
     plt.figure(i)
-    nx.draw(G, with_labels=True)
+    colores = ['red' if G.nodes[n]['estado'] == 1 else 'yellow' if G.nodes[n]['estado'] == 0 else 'green' for n in G.nodes()]
+    nx.draw(G, with_labels=True, node_color=colores)
     
-
-
 plt.show()
