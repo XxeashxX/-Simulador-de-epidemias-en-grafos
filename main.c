@@ -7,7 +7,7 @@ int main() {
     srand(time(NULL));  // Inicializar la semilla del generador de números aleatorios
 
     // Definir los parámetros de la simulación
-    int dias = 10;
+    int dias = 5;
     int filas = 5;
     int columnas = 5;
     int porcentajeDeInfectadosIniciales = (int)2;

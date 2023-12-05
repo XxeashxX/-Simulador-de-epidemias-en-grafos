@@ -3,15 +3,59 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
+//funcion para contar infectados
+int contarInfectados(int dia, int filas, int columnas, int **matrizDeDatos) {
+    int contador = 0;
+    for (int i = 0; i < filas; i++) {
+        for (int j = 0; j < columnas; j++) {
+            if (matrizDeDatos[i * columnas + j][dia] == Infectado) {
+                contador++;
+            }
+        }
+    }
+    return contador;
+}
+//funcion para contar recuperados
+int contarRecuperados(int dia, int filas, int columnas, int **matrizDeDatos){
+    int contador = 0;
+    for (int i = 0; i < filas; i++) {
+        for (int j = 0; j < columnas; j++) {
+            if (matrizDeDatos[i * columnas + j][dia] == Recuperado) {
+                contador++;
+            }
+        }
+    }
+    return contador;
 
+}
+//funcion para contar susceptibles
+int contarSusceptibles(int dia, int filas, int columnas, int **matrizDeDatos){
+    int contador = 0;
+    for (int i = 0; i < filas; i++) {
+        for (int j = 0; j < columnas; j++) {
+            if (matrizDeDatos[i * columnas + j][dia] == Susceptible) {
+                contador++;
+            }
+        }
+    }
+    return contador;
+
+}
 // Función para simular la propagación de la Gripe
 void simularGripe(int dias, int filas, int columnas, int porcentajeDeInfectadosIniciales) {
+    //generar archivo con matrices de adyacencia
     FILE *file = fopen("matrices_de_adyacencia.csv", "w");
     if (file == NULL)
     {
         printf("No se pudo abrir el archivo\n");
         exit(1);
     }
+    //generar archivo para informes de estados 
+    FILE *InformeDeEstadoFile = fopen("InformeDeEstado.csv", "w");
+    if (InformeDeEstadoFile == NULL) {
+    printf("No se pudo abrir el archivo para el informe de estado\n");
+    exit(1);
+}
     int CantidadNodos = filas * columnas;
     int **matrizDeDatos;
     int **matrizDeAdyacencia;
@@ -177,8 +221,22 @@ void simularGripe(int dias, int filas, int columnas, int porcentajeDeInfectadosI
         fprintf(file, "\n");
         }
         fprintf(file, "\n");
+
+    //imprimir infectados, recuperados y susceptibles haciendo uso de las funciones de arriba
+    int infectadostot = contarInfectados(dia, filas, columnas, matrizDeDatos);
+    printf("Dia%d\n", dia+1);
+    printf(" Total de infectados: %d\n", infectadostot);
+    printf("\n");
+    int recuperadostot = contarRecuperados(dia, filas, columnas, matrizDeDatos);
+    printf("Total de recuperados: %d\n",recuperadostot);
+    printf("\n");
+    int susceptiblestot = contarSusceptibles(dia, filas, columnas, matrizDeDatos);
+    printf(" Total de susceptibles: %d\n", susceptiblestot);
+    printf("\n");
+    fprintf(InformeDeEstadoFile, "%d,%d,%d\n", infectadostot, recuperadostot, susceptiblestot); //escribir en archivo csv informe de estado
     }
     fclose(file);
+    fclose(InformeDeEstadoFile);
     for (int i = 0; i < filas; i++)
     {
         free(matrizNodos[i]); //libera memoria asignada a matrizNodos
@@ -194,16 +252,6 @@ void simularGripe(int dias, int filas, int columnas, int porcentajeDeInfectadosI
         exit(1);
     }
 
-    for (int i = 1; i <= dias; i++){
-        if (i < dias){
-        fprintf(file2, "dia%d,", i);
-        }
-        else{
-            fprintf(file2, "dia%d", i);
-        }
-        
-    }
-    fprintf(file2, "\n");
     //fprintf(file, "dia1\tdia2\tdia3\tdia4\tdia5\tdia6\tdia7\tdia8\tdia9\tdia10\n");
     for (int i = 0; i < (filas * columnas); i++)
     {
@@ -218,6 +266,12 @@ void simularGripe(int dias, int filas, int columnas, int porcentajeDeInfectadosI
         fprintf(file2, "\n");
     }
     fclose(file2);
+    
+
+
+
+
+
     for (int i = 0; i < dias + 1; i++)
     {
         free(matrizDeDatos[i]);
